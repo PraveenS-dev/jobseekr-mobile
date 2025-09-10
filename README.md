@@ -1,50 +1,37 @@
-# Welcome to your Expo app 👋
+# JobSeekr 🚀
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+JobSeekr is a **React Native (Expo)** mobile application designed to help job seekers discover, apply, and track job opportunities with ease.  
+It provides an intuitive interface for browsing jobs, managing profiles, and showcasing skills, making the job-hunting process faster and smarter.  
 
-## Get started
+## ✨ Features
+- 🔍 **Job Search** – Search and filter jobs by title, location, or skills  
+- 👤 **Profile Management** – Create and update your professional profile  
+- 🛠️ **Skill Tagging** – Add and rate your skills to stand out to employers  
+- 📩 **Application Tracking** – Track status of applied jobs in real-time  
+- 📱 **Cross-Platform** – Runs seamlessly on both iOS and Android  
 
-1. Install dependencies
+## 🛠️ Tech Stack
+- [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/)  
+- [React Navigation](https://reactnavigation.org/)  
+- [Redux / Zustand] for state management  
+- REST API / GraphQL backend integration  
 
-   ```bash
-   npm install
-   ```
+## ⚙️ Environment Configuration
+Create a `.env` file in the project root and add the following variables:
 
-2. Start the app
+```env
+EXPO_PUBLIC_LARAVEL_URL="http://192.168.137.1:8000"
+EXPO_PUBLIC_NODE_URL="http://192.168.137.1:5000"
 
-   ```bash
-   npx expo start
-   ```
+🚀 Getting Started
+# Clone the repository
+git clone https://github.com/PraveenS-dev/jobseekr-mobile.git
 
-In the output, you'll find options to open the app in a
+# Navigate to the project
+cd jobseekr
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+# Install dependencies
+npm install
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Run the app
+expo start
