@@ -8,6 +8,11 @@ import TopBar from '../components/TopBar';
 import { getUserDetails, getUserExp } from '@/services/UserList';
 import { NODE_API } from '@/services/Node_BaseURL';
 import dayjs from 'dayjs';
+import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import { changeUserCoverImage, changeUserProfileImage } from '@/services/UserService';
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -17,6 +22,8 @@ const Profile = () => {
     const [viewCount, setViewCount] = useState<number | null>(null);
     const [viewers, setViewers] = useState<any[]>([]);
     const [viewersVisible, setViewersVisible] = useState(false);
+    const [changeProfileImage, setChangeProfileImage] = useState(false);
+    const [changeCoverImage, setChangeCoverImage] = useState(false);
     const [profilePreviewVisible, setProfilePreviewVisible] = useState(false);
     const [resumeVisible, setResumeVisible] = useState(false);
     const [webViewAvailable, setWebViewAvailable] = useState<boolean | null>(null);
@@ -24,6 +31,19 @@ const Profile = () => {
     const { colors } = useTheme();
     const [userExp, setUserExp] = useState<any[]>([]);
     const [trackWidth, setTrackWidth] = useState(0);
+    const [selectedImage, setSelectedImage] = useState<any>(null);
+    const [selectedCoverImage, setSelectedCoverImage] = useState<any>(null);
+
+    const fetchUser = async () => {
+        try {
+            const data = await getUser();
+            setUser(data);
+        } catch (err) {
+            console.error('Error fetching user:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -120,6 +140,117 @@ const Profile = () => {
         Linking.openURL(fixLocalhostUrl(url));
     };
 
+    const ShowChangeProfile = async () => {
+        setChangeProfileImage(true);
+
+    }
+
+    const ShowChangeCoverImage = async () => {
+        setChangeCoverImage(true);
+
+    }
+
+    const ChangeProfile = async (data: any) => {
+        try {
+            const res = await changeUserProfileImage(data, user.id);
+            setChangeProfileImage(false);
+            fetchUser();
+        } catch (error) {
+            console.log("Profile update error:", error);
+        }
+    };
+
+
+    const ChangeCoverImage = async (data: any) => {
+        try {
+            const res = await changeUserCoverImage(data, user.id);
+            setChangeCoverImage(false);
+            fetchUser();
+        } catch (error) {
+            console.log("CoverImage update error:", error);
+
+        }
+    }
+
+    const pickImage = async () => {
+        // Ask for permissions
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permission.status !== "granted") {
+            alert("Permission required to access photos!");
+            return;
+        }
+
+        // Open gallery
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true, // gives a square crop box
+            aspect: [1, 1], // force 1:1 crop
+            quality: 0.8,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            // result.assets[0] has the image
+            const picked = result.assets[0];
+
+            // Optionally manipulate (resize/compress more)
+            const manipulated = await ImageManipulator.manipulateAsync(
+                picked.uri,
+                [{ resize: { width: 300, height: 300 } }],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+            );
+
+            setSelectedImage(`data:image/png;base64,${manipulated.base64}`);
+        }
+    };
+
+    const PickCoverImage = async () => {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permission.status !== "granted") {
+            alert("Permission required to access photos!");
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: false, // pick full image
+            quality: 1,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const picked = result.assets[0];
+
+            // Crop to 16:5 using ImageManipulator
+            const width = picked.width;
+            const height = picked.height;
+
+            // Calculate 16:5 crop box (center crop)
+            const targetWidth = width;
+            const targetHeight = (width / 16) * 5;
+            const originY = (height - targetHeight) / 2;
+
+            const manipulated = await ImageManipulator.manipulateAsync(
+                picked.uri,
+                [
+                    {
+                        crop: {
+                            originX: 0,
+                            originY: originY,
+                            width: targetWidth,
+                            height: targetHeight,
+                        },
+                    },
+                    { resize: { width: 1200 } }, // optional resize
+                ],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+            );
+
+            setSelectedCoverImage(`data:image/png;base64,${manipulated.base64}`); // preview
+        }
+    };
+
+
 
     if (loading) {
         return (
@@ -134,26 +265,45 @@ const Profile = () => {
             <TopBar />
 
             <ScrollView contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background, paddingBottom: 120 }]}>
-                <Image
-                    source={{
-                        uri: user.cover_img_path
-                            ? fixLocalhostUrl(user.cover_img_path)
-                            : 'https://www.dummyimage.com/1200x375/000/5a57ab&text=COVER',
-                    }}
-                    style={styles.coverImage}
-                />
 
-
-                <TouchableOpacity activeOpacity={0.9} onPress={() => setProfilePreviewVisible(true)}>
+                {/* Cover Image with Pencil */}
+                <View style={{ position: 'relative' }}>
                     <Image
                         source={{
-                            uri: user.profile_path
-                                ? fixLocalhostUrl(user.profile_path)
-                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&size=80`,
+                            uri: user.cover_img_path
+                                ? fixLocalhostUrl(user.cover_img_path)
+                                : 'https://www.dummyimage.com/1200x375/000/5a57ab&text=COVER',
                         }}
-                        style={styles.profileImage}
+                        style={styles.coverImage}
                     />
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.coverEditIcon}
+                        onPress={() => ShowChangeCoverImage()}
+                    >
+                        <MaterialIcons name="edit" size={24} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Profile Image with Pencil */}
+                <View style={{ alignItems: 'center', marginTop: -50 }}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => setProfilePreviewVisible(true)}>
+                        <Image
+                            source={{
+                                uri: user.profile_path
+                                    ? fixLocalhostUrl(user.profile_path)
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&size=80`,
+                            }}
+                            style={styles.profileImage}
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.profileEditIcon}
+                        onPress={() => ShowChangeProfile()}
+                    >
+                        <MaterialIcons name="edit" size={20} color="#fff" />
+                    </TouchableOpacity>
+                </View>
 
 
                 <View style={styles.infoContainer}>
@@ -267,6 +417,100 @@ const Profile = () => {
                 </View>
             </ScrollView>
 
+            <Modal
+                visible={changeProfileImage}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setChangeProfileImage(false)}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+
+                        <View style={styles.rowBetween}>
+                            <Text style={[styles.modalTitle, { color: colors.accent }]}>Change Profile</Text>
+                            <TouchableOpacity onPress={() => setChangeProfileImage(false)}>
+                                <Text style={[styles.closeText, { color: colors.textSecondary }]}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity style={styles.selectBtn} onPress={pickImage}>
+                            <Text style={{ color: "#fff" }}>Select Image</Text>
+                        </TouchableOpacity>
+
+                        {selectedImage ? (
+                            <Image
+                                source={{ uri: selectedImage }}
+                                style={{
+                                    width: 120,
+                                    height: 120,
+                                    borderRadius: 60,
+                                    alignSelf: "center",
+                                    marginVertical: 10,
+                                }}
+                            />
+                        ) : null}
+
+                        <TouchableOpacity
+                            style={styles.submitBtn}
+                            onPress={() => ChangeProfile(selectedImage)}
+                            disabled={!selectedImage}
+                        >
+                            <Text style={{ color: "#fff" }}>Submit</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={changeCoverImage}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setChangeCoverImage(false)}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+
+                        {/* Header */}
+                        <View style={styles.rowBetween}>
+                            <Text style={[styles.modalTitle, { color: colors.accent }]}>Change Cover Image</Text>
+                            <TouchableOpacity onPress={() => setChangeCoverImage(false)}>
+                                <Text style={[styles.closeText, { color: colors.textSecondary }]}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Select Image Button */}
+                        <TouchableOpacity style={styles.selectBtn} onPress={PickCoverImage}>
+                            <Text style={{ color: "#fff", fontWeight: "bold" }}>Select Image</Text>
+                        </TouchableOpacity>
+
+                        {/* Preview */}
+                        {selectedCoverImage ? (
+                            <Image
+                                source={{ uri: selectedCoverImage }}
+                                style={{
+                                    width: "100%",        // full width of modal
+                                    height: 200,          // standard cover height
+                                    borderRadius: 12,     // subtle rounding
+                                    alignSelf: "center",
+                                    marginVertical: 15,
+                                    resizeMode: "cover",  // scale image properly
+                                }}
+                            />
+                        ) : null}
+
+                        {/* Submit Button */}
+                        <TouchableOpacity
+                            style={styles.submitBtn}
+                            onPress={() => ChangeCoverImage(selectedCoverImage)}
+                            disabled={!selectedCoverImage}
+                        >
+                            <Text style={{ color: "#fff", fontWeight: "bold" }}>Submit</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </View>
+            </Modal>
+
             <Modal visible={viewersVisible} transparent animationType="fade" onRequestClose={() => setViewersVisible(false)}>
                 <View style={styles.modalBackdrop}>
                     <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
@@ -343,6 +587,23 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -40,
         marginLeft: -180,
+    },
+
+    coverEditIcon: {
+        position: 'absolute',
+        right: 10,
+        bottom: 10,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 20,
+        padding: 6,
+    },
+    profileEditIcon: {
+        position: 'absolute',
+        right: 55,
+        top: 35,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 15,
+        padding: 4,
     },
     infoContainer: {
         marginTop: 80,
@@ -536,4 +797,19 @@ const styles = StyleSheet.create({
         marginTop: 2,
         color: '#6b7280',
     },
+    selectBtn: {
+        backgroundColor: '#5a57ab',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 20,
+        alignItems: "center"
+    },
+    submitBtn: {
+        backgroundColor: 'green',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 10,
+        alignItems: "center"
+    }
+
 });

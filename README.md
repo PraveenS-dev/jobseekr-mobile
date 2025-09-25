@@ -12,8 +12,7 @@ It provides an intuitive interface for browsing jobs, managing profiles, and sho
 
 ## 🛠️ Tech Stack
 - [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/)  
-- [React Navigation](https://reactnavigation.org/)  
-- [Redux / Zustand] for state management  
+- [React Navigation](https://reactnavigation.org/)
 - REST API / GraphQL backend integration  
 
 ## ⚙️ Environment Configuration
