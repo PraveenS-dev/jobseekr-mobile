@@ -1,3 +1,4 @@
+import { RootStackParamList } from '@/navigation/AppNavigator';
 import { login } from '@/services/Auth';
 import { useTheme } from '@/services/Theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,17 +7,18 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View
 } from 'react-native';
-import { RootStackParamList } from '.';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -42,14 +44,11 @@ export default function Login({ navigation }: LoginProps) {
 
         setLoading(true);
         try {
-            const data = await login(email, password);
-            console.log("Login Success:", data);
-
+            await login(email, password);
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'Main' }],
             });
-
         } catch (error: any) {
             console.error("Login Error:", error);
             Alert.alert('Login Failed', error.error || 'Invalid credentials');
@@ -58,7 +57,6 @@ export default function Login({ navigation }: LoginProps) {
         }
     };
 
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -66,60 +64,175 @@ export default function Login({ navigation }: LoginProps) {
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView
-                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+                    contentContainerStyle={styles.scrollContainer}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <Text style={{ fontSize: 32, marginBottom: 20, color: colors.textPrimary, fontWeight: '700' }}>Login</Text>
+                    {/* App Logo / Title */}
+                    <View style={styles.header}>
+                        <Image
+                            source={require("@/assets/images/favicon.png")}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>
+                            Welcome Back
+                        </Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                            Please sign in to continue
+                        </Text>
+                    </View>
 
-                    <View style={{ width: '100%', gap: 12 }}>
+
+                    {/* Form */}
+                    <View style={styles.form}>
                         <TextInput
                             placeholder="Email"
                             placeholderTextColor={colors.inputPlaceholder}
                             value={email}
                             onChangeText={setEmail}
-                            style={{
-                                width: '100%',
-                                borderWidth: 1,
-                                borderColor: colors.border,
-                                backgroundColor: colors.inputBackground,
-                                color: colors.inputText,
-                                padding: 12,
-                                borderRadius: 8,
-                            }}
+                            style={[
+                                styles.input,
+                                {
+                                    borderColor: colors.border,
+                                    backgroundColor: colors.inputBackground,
+                                    color: colors.inputText,
+                                },
+                            ]}
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
 
-                        <View style={{
-                            flexDirection: 'row', alignItems: 'center', width: '100%',
-                            borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingRight: 8,
-                            backgroundColor: colors.inputBackground,
-                        }}>
+                        <View
+                            style={[
+                                styles.inputWrapper,
+                                { borderColor: colors.border, backgroundColor: colors.inputBackground },
+                            ]}
+                        >
                             <TextInput
                                 placeholder="Password"
                                 placeholderTextColor={colors.inputPlaceholder}
                                 value={password}
                                 onChangeText={setPassword}
-                                style={{ flex: 1, padding: 12, color: colors.inputText }}
+                                style={[styles.passwordInput, { color: colors.inputText }]}
                                 secureTextEntry={!showPassword}
                             />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 6 }}>
-                                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color={colors.textSecondary} />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.iconBtn}>
+                                <Ionicons
+                                    name={showPassword ? 'eye-off' : 'eye'}
+                                    size={22}
+                                    color={colors.icon}
+                                />
                             </TouchableOpacity>
                         </View>
                     </View>
 
-                    <View style={{ height: 16 }} />
+                    {/* Button */}
+                    <View style={{ width: '100%' }}>
+                        {loading ? (
+                            <ActivityIndicator size="large" color={colors.accent} />
+                        ) : (
+                            <TouchableOpacity onPress={handleLogin} style={[styles.loginBtn, { backgroundColor: colors.accent }]}>
+                                <Text style={[styles.loginText, { color: colors.accentText }]}>
+                                    Login
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
 
-                    {loading ? (
-                        <ActivityIndicator size="large" color={colors.accent} />
-                    ) : (
-                        <TouchableOpacity onPress={handleLogin} style={{ backgroundColor: colors.accent, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 10, width: '100%' }}>
-                            <Text style={{ color: colors.accentText, textAlign: 'center', fontWeight: '700', fontSize: 16 }}>Login</Text>
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Text style={{ color: colors.textSecondary }}>Don’t have an account?</Text>
+                        <TouchableOpacity
+                            onPress={() =>
+                                navigation.reset({ index: 0, routes: [{ name: 'Register' }] })
+                            }
+                        >
+                            <Text style={[styles.link, { color: colors.primary }]}> Register</Text>
                         </TouchableOpacity>
-                    )}
+                    </View>
                 </ScrollView>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );
 }
+
+const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+    },
+    header: {
+        alignItems: "center",
+        marginBottom: 32,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: "700",
+        marginTop: 12,
+    },
+    subtitle: {
+        fontSize: 15,
+        marginTop: 4,
+    },
+    form: {
+        width: "100%",
+        gap: 14,
+        marginBottom: 20,
+    },
+    input: {
+        width: "100%",
+        borderWidth: 1,
+        padding: 14,
+        borderRadius: 10,
+        fontSize: 16,
+    },
+    inputWrapper: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingRight: 10,
+    },
+    passwordInput: {
+        flex: 1,
+        padding: 14,
+        fontSize: 16,
+    },
+    iconBtn: {
+        padding: 6,
+    },
+    loginBtn: {
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    loginText: {
+        fontSize: 17,
+        fontWeight: "700",
+    },
+    footer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 20,
+        gap: 4,
+    },
+    link: {
+        fontWeight: "600",
+        fontSize: 15,
+    },
+    logo: {
+        width: "30%",
+        height: undefined,
+        aspectRatio: 1, 
+        maxHeight: 150,
+        marginBottom: 16,
+    },
+
+});

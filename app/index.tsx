@@ -11,7 +11,7 @@ export default function App() {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (token) setInitialRoute('Main');
       } catch (err) {
         console.error('Error checking token:', err);

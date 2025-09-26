@@ -95,7 +95,7 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({ route, navigation }) 
       await ResumeView(appId, job_name);
       GetApplicationDetails(appId);
     } catch (err) {
-      console.log("Something went wrong!", err);
+      console.error("Something went wrong!", err);
     }
   };
 
@@ -104,7 +104,7 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({ route, navigation }) 
       await ApplicationApprovalHandle(appId, action, job_name);
       GetApplicationDetails(appId);
     } catch (err) {
-      console.log("Something went wrong!", err);
+      console.error("Something went wrong!", err);
     }
   };
 

@@ -12,11 +12,14 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { changeUserCoverImage, changeUserProfileImage } from '@/services/UserService';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
 
+type ProfileProps = NativeStackScreenProps<RootStackParamList, "Profile">
 const screenWidth = Dimensions.get('window').width;
 
-const Profile = () => {
+const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [viewCount, setViewCount] = useState<number | null>(null);
@@ -25,8 +28,6 @@ const Profile = () => {
     const [changeProfileImage, setChangeProfileImage] = useState(false);
     const [changeCoverImage, setChangeCoverImage] = useState(false);
     const [profilePreviewVisible, setProfilePreviewVisible] = useState(false);
-    const [resumeVisible, setResumeVisible] = useState(false);
-    const [webViewAvailable, setWebViewAvailable] = useState<boolean | null>(null);
     const progressAnim = useRef(new Animated.Value(0)).current;
     const { colors } = useTheme();
     const [userExp, setUserExp] = useState<any[]>([]);
@@ -58,6 +59,7 @@ const Profile = () => {
         };
         fetchUser();
     }, []);
+
     useEffect(() => {
         const load = async () => {
             try {
@@ -108,7 +110,6 @@ const Profile = () => {
         try {
             const res = await NODE_API.get(`/profileViewCount/getViewerIds/${user.id}`);
             const ids: string[] = res.data?.viewer_ids || [];
-            console.log(res);
 
             if (!ids.length) {
                 setViewers([]);
@@ -156,10 +157,9 @@ const Profile = () => {
             setChangeProfileImage(false);
             fetchUser();
         } catch (error) {
-            console.log("Profile update error:", error);
+            console.error("Profile update error:", error);
         }
     };
-
 
     const ChangeCoverImage = async (data: any) => {
         try {
@@ -167,7 +167,7 @@ const Profile = () => {
             setChangeCoverImage(false);
             fetchUser();
         } catch (error) {
-            console.log("CoverImage update error:", error);
+            console.error("CoverImage update error:", error);
 
         }
     }
@@ -204,6 +204,36 @@ const Profile = () => {
         }
     };
 
+    const captureImage = async () => {
+        // Ask for permissions
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (permission.status !== "granted") {
+            alert("Permission required to access photos!");
+            return;
+        }
+
+        // Open gallery
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const picked = result.assets[0];
+
+            const manipulated = await ImageManipulator.manipulateAsync(
+                picked.uri,
+                [{ resize: { width: 300, height: 300 } }],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+            );
+
+            setSelectedImage(`data:image/png;base64,${manipulated.base64}`);
+        }
+    };
+
     const PickCoverImage = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permission.status !== "granted") {
@@ -213,7 +243,7 @@ const Profile = () => {
 
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: false, // pick full image
+            allowsEditing: false,
             quality: 1,
             base64: true,
         });
@@ -221,11 +251,9 @@ const Profile = () => {
         if (!result.canceled) {
             const picked = result.assets[0];
 
-            // Crop to 16:5 using ImageManipulator
             const width = picked.width;
             const height = picked.height;
 
-            // Calculate 16:5 crop box (center crop)
             const targetWidth = width;
             const targetHeight = (width / 16) * 5;
             const originY = (height - targetHeight) / 2;
@@ -241,16 +269,58 @@ const Profile = () => {
                             height: targetHeight,
                         },
                     },
-                    { resize: { width: 1200 } }, // optional resize
+                    { resize: { width: 1200 } },
                 ],
                 { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
             );
 
-            setSelectedCoverImage(`data:image/png;base64,${manipulated.base64}`); // preview
+            setSelectedCoverImage(`data:image/png;base64,${manipulated.base64}`);
         }
     };
 
+    const captureCoverImage = async () => {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (permission.status !== "granted") {
+            alert("Permission required to access photos!");
+            return;
+        }
 
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: false,
+            quality: 1,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const picked = result.assets[0];
+
+            const width = picked.width;
+            const height = picked.height;
+
+            const targetWidth = width;
+            const targetHeight = (width / 16) * 5;
+            const originY = (height - targetHeight) / 2;
+
+            const manipulated = await ImageManipulator.manipulateAsync(
+                picked.uri,
+                [
+                    {
+                        crop: {
+                            originX: 0,
+                            originY: originY,
+                            width: targetWidth,
+                            height: targetHeight,
+                        },
+                    },
+                    { resize: { width: 1200 } },
+                ],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+            );
+
+            setSelectedCoverImage(`data:image/png;base64,${manipulated.base64}`);
+        }
+    };
 
     if (loading) {
         return (
@@ -258,6 +328,10 @@ const Profile = () => {
                 <ActivityIndicator size="large" color={colors.accent} />
             </View>
         );
+    }
+
+    const viewUser = (id: string) => {
+        navigation.navigate("UserProfile", { id })
     }
 
     return (
@@ -389,7 +463,6 @@ const Profile = () => {
                         </View>
                     )}
 
-
                     <View style={[styles.card, { backgroundColor: colors.background }]}>
                         <Text style={[styles.cardTitle, { color: colors.accent }]}>📞 Contact</Text>
                         <View style={{ gap: 6 }}>
@@ -400,7 +473,7 @@ const Profile = () => {
 
                     <TouchableOpacity activeOpacity={0.8} onPress={openViewers} style={[styles.card, { backgroundColor: colors.background }]}>
                         <Text style={[styles.cardTitle, { color: colors.accent }]}>🧠 Activity</Text>
-                        <Text style={[styles.contactLine, { color: colors.textPrimary }]}>👁️ Views: {viewCount ?? '—'}</Text>
+                        <Text style={[styles.contactLine, { color: colors.textPrimary }]}>👁️ Profile Views: {viewCount ?? '—'}</Text>
                         <Text style={[styles.helper, { color: colors.textSecondary }]}>Tap to see recent viewers</Text>
                     </TouchableOpacity>
 
@@ -424,18 +497,19 @@ const Profile = () => {
                 onRequestClose={() => setChangeProfileImage(false)}
             >
                 <View style={styles.modalBackdrop}>
+                    <Pressable style={StyleSheet.absoluteFill} onPress={() => setChangeProfileImage(false)} />
+
                     <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
 
                         <View style={styles.rowBetween}>
                             <Text style={[styles.modalTitle, { color: colors.accent }]}>Change Profile</Text>
-                            <TouchableOpacity onPress={() => setChangeProfileImage(false)}>
-                                <Text style={[styles.closeText, { color: colors.textSecondary }]}>✕</Text>
+                            <TouchableOpacity onPress={() => setChangeProfileImage(false)}
+                                style={[styles.x_mark]}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[styles.closeText]}>✕</Text>
                             </TouchableOpacity>
                         </View>
-
-                        <TouchableOpacity style={styles.selectBtn} onPress={pickImage}>
-                            <Text style={{ color: "#fff" }}>Select Image</Text>
-                        </TouchableOpacity>
 
                         {selectedImage ? (
                             <Image
@@ -450,8 +524,30 @@ const Profile = () => {
                             />
                         ) : null}
 
+                        <View style={styles.actionBtnRow}>
+                            <TouchableOpacity
+                                onPress={pickImage}
+                                style={styles.selectBtn}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialIcons name="photo-library" size={24} color="#fff" style={{ marginRight: 10 }} />
+
+                                <Text style={styles.selectBtnText}>Gallery</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={captureImage}
+                                style={styles.selectBtn}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialIcons name="camera-alt" size={24} color="#fff" style={{ marginRight: 10 }} />
+
+                                <Text style={styles.selectBtnText}>Camera</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <TouchableOpacity
-                            style={styles.submitBtn}
+                            style={[styles.submitBtn, { marginTop: 25 }]}
                             onPress={() => ChangeProfile(selectedImage)}
                             disabled={!selectedImage}
                         >
@@ -468,43 +564,61 @@ const Profile = () => {
                 onRequestClose={() => setChangeCoverImage(false)}
             >
                 <View style={styles.modalBackdrop}>
+                    <Pressable style={StyleSheet.absoluteFill} onPress={() => setChangeCoverImage(false)} />
+
                     <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
 
                         {/* Header */}
                         <View style={styles.rowBetween}>
                             <Text style={[styles.modalTitle, { color: colors.accent }]}>Change Cover Image</Text>
-                            <TouchableOpacity onPress={() => setChangeCoverImage(false)}>
-                                <Text style={[styles.closeText, { color: colors.textSecondary }]}>✕</Text>
+                            <TouchableOpacity
+                                onPress={() => setChangeCoverImage(false)}
+                                style={[styles.x_mark]}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>✕</Text>
+                            </TouchableOpacity>
+
+                        </View>
+
+                        {/* Preview */}
+                        {selectedCoverImage && (
+                            <Image
+                                source={{ uri: selectedCoverImage }}
+                                style={styles.coverPreview}
+                            />
+                        )}
+
+                        {/* Action Buttons */}
+                        <View style={styles.actionBtnRow}>
+                            <TouchableOpacity
+                                onPress={PickCoverImage}
+                                style={styles.selectBtn}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialIcons name="photo-library" size={24} color="#fff" style={{ marginRight: 10 }} />
+
+                                <Text style={styles.selectBtnText}>Gallery</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={captureCoverImage}
+                                style={styles.selectBtn}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialIcons name="camera-alt" size={24} color="#fff" style={{ marginRight: 10 }} />
+
+                                <Text style={styles.selectBtnText}>Camera</Text>
                             </TouchableOpacity>
                         </View>
 
-                        {/* Select Image Button */}
-                        <TouchableOpacity style={styles.selectBtn} onPress={PickCoverImage}>
-                            <Text style={{ color: "#fff", fontWeight: "bold" }}>Select Image</Text>
-                        </TouchableOpacity>
-
-                        {/* Preview */}
-                        {selectedCoverImage ? (
-                            <Image
-                                source={{ uri: selectedCoverImage }}
-                                style={{
-                                    width: "100%",        // full width of modal
-                                    height: 200,          // standard cover height
-                                    borderRadius: 12,     // subtle rounding
-                                    alignSelf: "center",
-                                    marginVertical: 15,
-                                    resizeMode: "cover",  // scale image properly
-                                }}
-                            />
-                        ) : null}
-
                         {/* Submit Button */}
                         <TouchableOpacity
-                            style={styles.submitBtn}
+                            style={[styles.submitBtn, { marginTop: 25 }]}
                             onPress={() => ChangeCoverImage(selectedCoverImage)}
                             disabled={!selectedCoverImage}
                         >
-                            <Text style={{ color: "#fff", fontWeight: "bold" }}>Submit</Text>
+                            <Text style={styles.submitBtnText}>Submit</Text>
                         </TouchableOpacity>
 
                     </View>
@@ -513,11 +627,16 @@ const Profile = () => {
 
             <Modal visible={viewersVisible} transparent animationType="fade" onRequestClose={() => setViewersVisible(false)}>
                 <View style={styles.modalBackdrop}>
+                    <Pressable style={StyleSheet.absoluteFill} onPress={() => setViewersVisible(false)} />
+
                     <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
                         <View style={styles.rowBetween}>
                             <Text style={[styles.modalTitle, { color: colors.accent }]}>Profile Viewers</Text>
-                            <TouchableOpacity onPress={() => setViewersVisible(false)}>
-                                <Text style={[styles.closeText, { color: colors.textSecondary }]}>✕</Text>
+                            <TouchableOpacity onPress={() => setViewersVisible(false)}
+                                style={[styles.x_mark]}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[styles.closeText]}>✕</Text>
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={{ maxHeight: 420 }}>
@@ -536,12 +655,14 @@ const Profile = () => {
                                             }}
                                             style={styles.viewerAvatar}
                                         />
+                                        <TouchableOpacity onPress={() => { viewUser(v.id); setViewersVisible(false) }}>
 
-                                        <View style={{ marginLeft: 10, flex: 1 }}>
-                                            <Text style={[styles.viewerName, { color: colors.textPrimary }]}>{v?.name}</Text>
-                                            {!!v?.username && (<Text style={[styles.viewerUsername, { color: colors.textSecondary }]}>@{v?.username}</Text>)}
-                                            {!!v?.email && (<Text style={[styles.viewerEmail, { color: colors.textSecondary }]}>{v?.email}</Text>)}
-                                        </View>
+                                            <View style={{ marginLeft: 10, flex: 1 }}>
+                                                <Text style={[styles.viewerName, { color: colors.textPrimary }]}>{v?.name}</Text>
+                                                {!!v?.username && (<Text style={[styles.viewerUsername, { color: colors.textSecondary }]}>@{v?.username}</Text>)}
+                                                {!!v?.email && (<Text style={[styles.viewerEmail, { color: colors.textSecondary }]}>{v?.email}</Text>)}
+                                            </View>
+                                        </TouchableOpacity>
                                     </View>
                                 ))
                             )}
@@ -554,7 +675,7 @@ const Profile = () => {
                 <View style={styles.modalBackdrop}>
                     <Pressable style={StyleSheet.absoluteFill} onPress={() => setProfilePreviewVisible(false)} />
                     <View style={[styles.modalCard, { padding: 0 }]}>
-                        <TouchableOpacity onPress={() => setProfilePreviewVisible(false)} style={{ position: 'absolute', right: 12, top: 12, zIndex: 2 }}>
+                        <TouchableOpacity onPress={() => setProfilePreviewVisible(false)} style={[{ position: 'absolute', right: 12, top: 12, zIndex: 2 }, styles.x_mark]}>
                             <Text style={styles.closeText}>✕</Text>
                         </TouchableOpacity>
                         <Image source={{ uri: fixLocalhostUrl(user.profile_path) }} style={{ width: '100%', height: 420, borderRadius: 16 }} resizeMode="cover" />
@@ -745,22 +866,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#fff',
     },
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-    },
-    modalCard: {
-        width: '100%',
-        maxWidth: 720,
-        borderWidth: 1,
-        borderRadius: 16,
-        padding: 16,
-        backgroundColor: '#ffffff',
-        borderColor: '#e5e7eb',
-    },
     modalTitle: {
         fontSize: 18,
         fontWeight: '800',
@@ -768,7 +873,7 @@ const styles = StyleSheet.create({
     },
     closeText: {
         fontSize: 18,
-        color: '#6b7280',
+        color: '#fff',
     },
     viewerItem: {
         flexDirection: 'row',
@@ -797,19 +902,82 @@ const styles = StyleSheet.create({
         marginTop: 2,
         color: '#6b7280',
     },
-    selectBtn: {
-        backgroundColor: '#5a57ab',
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 20,
-        alignItems: "center"
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
     },
+    modalCard: {
+        width: "100%",
+        borderRadius: 15,
+        padding: 20,
+    },
+    coverPreview: {
+        width: "100%",
+        height: 200,
+        borderRadius: 12,
+        marginVertical: 15,
+        resizeMode: "cover",
+    },
+    actionBtnRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 20,
+        width: "100%",
+    },
+    selectBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#4a90e2", // Slightly dark sky blue
+        paddingVertical: 14,
+        borderRadius: 12,
+        flex: 0.48,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    selectBtnText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+
     submitBtn: {
-        backgroundColor: 'green',
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 10,
-        alignItems: "center"
+        backgroundColor: "#4a90e2",
+        paddingVertical: 14,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    submitBtnText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+        letterSpacing: 0.5,
+    },
+    x_mark: {
+        width: 30,
+        height: 30,
+        borderRadius: 20,
+        backgroundColor: '#4a90e2',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     }
+
 
 });

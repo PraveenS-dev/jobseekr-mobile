@@ -73,7 +73,7 @@ export const ResumeView = async (appId: string, job_name: string) => {
         const res = await LARAVEL_API.post("/application/resumeViewed", { id: appId, job_name });
         return res;
     } catch (error) {
-        console.log("Something went wrong!", error);
+        console.error("Something went wrong!", error);
     }
 };
 
@@ -82,7 +82,7 @@ export const ApplicationApprovalHandle = async (appId: string, action: number, j
         const res = await LARAVEL_API.post("/application/approval", { id: appId, action, job_name });
         return res.data.success;
     } catch (error) {
-        console.log("Something went wrong!", error);
+        console.error("Something went wrong!", error);
     }
 };
 
@@ -91,7 +91,7 @@ export const markAsViewed = async (id: string, job_name: string) => {
         const res = await LARAVEL_API.post("/application/applicationViewed", { id, job_name });
         return res.data.success;
     } catch (error) {
-        console.log("Something went wrong!", error);
+        console.error("Something went wrong!", error);
     }
 };
 

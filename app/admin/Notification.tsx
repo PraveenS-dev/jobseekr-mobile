@@ -99,7 +99,7 @@ const Notification = () => {
                 setUnreadCount(0);
             }
         } catch (err: any) {
-            console.log("Axios error:", err?.response?.data || err.message);
+            console.error("Axios error:", err?.response?.data || err.message);
         }
     };
 

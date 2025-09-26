@@ -1,4 +1,4 @@
-import { fixLocalhostUrl } from "@/services/helpers";
+import { fixLocalhostUrl, getUserRoleName } from "@/services/helpers";
 import { useTheme } from "@/services/Theme";
 import { changeUserStatus, deleteUser, getUserList } from "@/services/UserList";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
@@ -55,7 +55,7 @@ const ItemRow: React.FC<{
           </Text>
         </View>
 
-        {!!item.role_name && <Text style={{ color: colors.textSecondary, marginTop: 6 }}>Role: {item.role_name}</Text>}
+        {!!item.role_name && <Text style={{ color: colors.textSecondary, marginTop: 6 }}>Role: {getUserRoleName(item.role_name)}</Text>}
         {!!item.created_at && <Text style={{ color: colors.textSecondary, marginTop: 2 }}>Created: {item.created_at}</Text>}
 
         <View style={styles.actions}>

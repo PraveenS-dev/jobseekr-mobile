@@ -6,7 +6,7 @@ export const getMessageUserList = async (userId: number) => {
         const res = await NODE_API.get(`/chat/user/getMessageUserList/${userId}`);
         return Array.isArray(res.data) ? res.data : [];
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 };
 
@@ -19,7 +19,7 @@ export const getUserData = async (id: number) => {
         const res = await LARAVEL_API.get(`/users/view`, { params: { id } });
         return res.data.data?.userDetails;
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 };
 

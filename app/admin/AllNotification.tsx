@@ -32,7 +32,7 @@ const AllNotification: React.FC<AllNotificationProp> = ({ route, navigation }) =
             const unread = res.data.data.filter((n: any) => !n.is_read).length;
             setUnreadCount(unread);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     };
 
@@ -59,7 +59,7 @@ const AllNotification: React.FC<AllNotificationProp> = ({ route, navigation }) =
                 setUnreadCount(0);
             }
         } catch (err: any) {
-            console.log("Axios error:", err?.response?.data || err.message);
+            console.error("Axios error:", err?.response?.data || err.message);
         }
     };
 

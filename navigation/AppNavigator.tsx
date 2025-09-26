@@ -15,6 +15,9 @@ import AllNotification from '@/app/admin/AllNotification';
 import JobList from '@/app/job/JobList';
 import ChatUserList from '@/app/chat/ChatUserList';
 import ChatWindow from '@/app/chat/ChatWindow';
+import Profile from '@/app/admin/Profile';
+import Register from '@/app/Register';
+import EmployerReg from '@/app/EmployerReg';
 
 export type RootStackParamList = {
     Login: undefined;
@@ -31,6 +34,9 @@ export type RootStackParamList = {
     AllNotification: undefined;
     ChatUserList: undefined;
     ChatWindow: { user: any };
+    Profile: undefined;
+    Register: undefined;
+    EmployerReg: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +48,8 @@ export default function AppNavigator({ initialRoute }: { initialRoute: 'Login' |
             screenOptions={{ headerShown: false }}
         >
             <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Register" component={Register} />
+            <Stack.Screen name="EmployerReg" component={EmployerReg} />
             <Stack.Screen name="Main" component={BottomTabs} />
             <Stack.Screen name="UserProfile" component={UserProfile} />
             <Stack.Screen name="JobView" component={JobView} />
@@ -54,6 +62,8 @@ export default function AppNavigator({ initialRoute }: { initialRoute: 'Login' |
             <Stack.Screen name="JobList" component={JobList} />
             <Stack.Screen name="ChatUserList" component={ChatUserList} />
             <Stack.Screen name="ChatWindow" component={ChatWindow} />
+            <Stack.Screen name="Profile" component={Profile} />
+
         </Stack.Navigator>
     );
 }

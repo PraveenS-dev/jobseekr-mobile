@@ -29,6 +29,7 @@ export type ThemeColors = {
 	inputBackground: string;
 	inputText: string;
 	inputPlaceholder: string;
+	icon: string;
 
 	tagLight?: string;
 	tagDark?: string;
@@ -72,6 +73,7 @@ const lightColors: ThemeColors = {
 	inputPlaceholder: '#9ca3af',
 
 	tagLight: '#E0F2FF',
+	icon: '#60A5FA',
 };
 
 const darkColors: ThemeColors = {
@@ -100,6 +102,7 @@ const darkColors: ThemeColors = {
 	inputPlaceholder: '#9ca3af',
 
 	tagDark: '#1E40AF',
+	icon: '#93C5FD', 
 };
 
 

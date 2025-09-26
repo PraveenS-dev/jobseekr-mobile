@@ -10,7 +10,7 @@ export const LARAVEL_API = axios.create({
 });
 
 LARAVEL_API.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem("userToken");
+  const token = await AsyncStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

@@ -14,3 +14,23 @@ export const formatDate = (dateString: string) => {
     minute: "2-digit",
   }).format(date);
 };
+
+
+export const getUserRoleName = (id: number) => {
+  let Rolename: string | undefined;
+  switch (id) {
+    case 1:
+      Rolename = "JobSeeker";
+      break;
+    case 2:
+      Rolename = "Admin";
+      break;
+    case 3:
+      Rolename = "Employee";
+      break;
+    default:
+      Rolename = "Undefined";
+      break;
+  }
+  return Rolename;
+}

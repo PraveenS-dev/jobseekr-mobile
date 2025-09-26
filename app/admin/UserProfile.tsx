@@ -89,7 +89,7 @@ export default function UserProfile({ route, navigation }: Props) {
         const fetchViewCount = async () => {
             if (!user?.id) return;
             try {
-                const res = await axios.get(`${NODE_API}/profileViewCount/getViewerCount/${user.id}`);
+                const res = await NODE_API.get(`/profileViewCount/getViewerCount/${user.id}`);
                 setViewCount(res.data?.viewCount ?? 0);
             } catch {
                 setViewCount(0);
@@ -215,8 +215,8 @@ export default function UserProfile({ route, navigation }: Props) {
                     {/* Activity */}
                     <TouchableOpacity activeOpacity={0.8} style={[styles.card, { backgroundColor: colors.background }]}>
                         <Text style={[styles.cardTitle, { color: colors.accent }]}>🧠 Activity</Text>
-                        <Text style={{ color: colors.textPrimary }}>👁️ Views: {viewCount ?? '—'}</Text>
-                        <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginTop: 4 }}>Tap to see recent viewers</Text>
+                        <Text style={{ color: colors.textPrimary }}>👁️ Profile Views: {viewCount ?? '—'}</Text>
+                        {/* <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginTop: 4 }}>Tap to see recent viewers</Text> */}
                     </TouchableOpacity>
 
                     {/* Resume */}
