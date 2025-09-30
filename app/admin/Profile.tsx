@@ -344,8 +344,8 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
                 <View style={{ position: 'relative' }}>
                     <Image
                         source={{
-                            uri: user.cover_img_path
-                                ? fixLocalhostUrl(user.cover_img_path)
+                            uri: user?.cover_img_path
+                                ? fixLocalhostUrl(user?.cover_img_path)
                                 : 'https://www.dummyimage.com/1200x375/000/5a57ab&text=COVER',
                         }}
                         style={styles.coverImage}
